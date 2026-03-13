@@ -45,6 +45,27 @@ import com.google.gson.JsonObject
 import androidx.compose.runtime.LaunchedEffect
 import edu.nd.pmcburne.hwapp.one.gamedata.GameScoreDatabase
 import edu.nd.pmcburne.hwapp.one.gamedata.SavedGame
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+private val AppBackground = Color(0xFF0B1220)
+private val PanelBackground = Color(0xFF111827)
+private val CardBackground = Color(0xFF182338)
+private val BorderColor = Color(0xFF263246)
+
+private val UvaBlue = Color(0xFF232D4B)
+private val UvaOrange = Color(0xFFF59E1B)
+
+private val SoftText = Color(0xFFF3F4F6)
+private val MutedText = Color(0xFF9CA3AF)
 
 // Data class - stores the game info shown on each card in the UI
 data class GameCardData(
@@ -95,7 +116,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HWStarterRepoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = AppBackground
+                ) { innerPadding ->
                     BasketballScoresScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -115,14 +139,12 @@ fun BasketballScoresScreen(modifier: Modifier = Modifier) {
     val database = remember { GameScoreDatabase.getDatabase(context) }
     val savedGameDataAccess = remember { database.savedGameDataAccess() }
 
-    var selectedDateText by remember {
+    var selectedDateText by rememberSaveable {
         mutableStateOf(formatter.format(calendar.time))
     }
 
-    var gender by remember { mutableStateOf("Men") }
-
+    var gender by rememberSaveable { mutableStateOf("Men") }
     var isLoading by remember { mutableStateOf(false) }
-
     var games by remember { mutableStateOf(listOf<GameCardData>()) }
 
     suspend fun loadScores() {
@@ -180,87 +202,208 @@ fun BasketballScoresScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Basketball Scores",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding(),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = "College Basketball Games",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                    ),
+                color = SoftText
+            )
+
+            Text(
+                text = "Scoreboard",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                ),
+                color = SoftText
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Scores by date and division",
+                style = MaterialTheme.typography.bodyMedium,
+                color = UvaOrange
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        calendar.set(year, month, dayOfMonth)
-                        selectedDateText = formatter.format(calendar.time)
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-                ).show()
-            }
-        ) {
-            Text("Date: $selectedDateText")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = PanelBackground),
+            border = BorderStroke(1.dp, BorderColor)
         ) {
-            Button(
-                onClick = { gender = "Men" },
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Text("Men")
-            }
+                Text(
+                    text = "Game Score Filters",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = SoftText
+                )
 
-            Button(
-                onClick = { gender = "Women" },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Women")
-            }
-        }
+                Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (gender == "Men") {
+                        Button(
+                            onClick = { gender = "Men" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = UvaOrange,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Men")
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { gender = "Men" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, BorderColor)
+                        ) {
+                            Text("Men", color = SoftText)
+                        }
+                    }
 
-        Text(
-            text = "Showing: $gender",
-            style = MaterialTheme.typography.bodyLarge
-        )
+                    if (gender == "Women") {
+                        Button(
+                            onClick = { gender = "Women" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = UvaOrange,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Women")
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { gender = "Women" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, BorderColor)
+                        ) {
+                            Text("Women", color = SoftText)
+                        }
+                    }
+                }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val parsedDate = formatter.parse(selectedDateText)
+                            if (parsedDate != null) {
+                                calendar.time = parsedDate
+                            }
 
-        Button(
-            onClick = {
-                scope.launch {
-                    loadScores()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    calendar.set(year, month, dayOfMonth)
+                                    selectedDateText = formatter.format(calendar.time)
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                        modifier = Modifier.weight(1.3f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = UvaBlue,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Date: $selectedDateText")
+                    }
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                loadScores()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = UvaOrange,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Refresh")
+                    }
                 }
             }
-        ) {
-            Text("Refresh")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "$gender Scoreboard",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.3.sp
+            ),
+            color = UvaOrange
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         if (isLoading) {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = UvaOrange)
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (!isLoading && games.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = PanelBackground),
+                        border = BorderStroke(1.dp, BorderColor)
+                    ) {
+                        Text(
+                            text = "No saved or live games found for this date.",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SoftText
+                        )
+                    }
+                }
+            }
+
             items(games) { game ->
                 GameCard(game = game)
             }
@@ -272,21 +415,79 @@ fun BasketballScoresScreen(modifier: Modifier = Modifier) {
 @Composable
 fun GameCard(game: GameCardData) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        border = BorderStroke(1.dp, BorderColor)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "${game.awayTeam} at ${game.homeTeam}",
-                style = MaterialTheme.typography.titleMedium
+                text = game.statusText.uppercase(),
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = UvaOrange
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Text(text = "Away Score: ${game.awayScore}")
-            Text(text = "Home Score: ${game.homeScore}")
-            Text(text = "Status: ${game.statusText}")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "AWAY",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MutedText
+                    )
+                    Text(
+                        text = game.awayTeam,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = SoftText
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "HOME",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MutedText
+                    )
+                    Text(
+                        text = game.homeTeam,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = SoftText
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = game.awayScore,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = SoftText
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Text(
+                        text = game.homeScore,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = SoftText
+                    )
+                }
+            }
         }
     }
 }
